@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: mysql-exporter
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: mysql-exporter
+    spec:
+      containers:
+      - name: mysql-exporter
+        image: prom/mysqld-exporter:latest
+        env:
+        - name: DATA_SOURCE_NAME
+          value: "root:password@(10.108.176.89:3306)/"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - name: http
+          containerPort: 9104
+ 
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mysql-exporter
+  namespace: monitoring
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9104"
+spec:
+  selector:
+    app: mysql-exporter
+  ports:
+    - name: prom
+      port: 9104
+      targetPort: 9104
+      protocol: TCP
