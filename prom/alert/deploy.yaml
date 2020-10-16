@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      name: alertmanager
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - name: alertmanager-reload
+          image: jimmidyson/configmap-reload:v0.3.0
+          args:
+            - "--volume-dir=/etc/config"
+            - "--webhook-url=http://localhost:9093/-/reload"
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: reload-config-volume
+              mountPath: /etc/config
+              readOnly: true
+        - name: alertmanager
+          image: prom/alertmanager:latest
+          args:
+            - "--config.file=/etc/alertmanager/config.yml"
+            - "--storage.path=/alertmanager"
+            - "--web.console.libraries=/etc/alertmanager/console_libraries"
+            - "--web.console.templates=/etc/alertmanager/consoles"
+            - "--web.enable-lifecycle"
+          ports:
+          - name: alertmanager
+            containerPort: 9093
+          volumeMounts:
+          - name: config-volume
+            mountPath: /etc/alertmanager
+          - name: templates-volume
+            mountPath: /etc/alertmanager-templates
+          - name: alertmanager
+            mountPath: /alertmanager
+      volumes:
+      - name: config-volume
+        configMap:
+          name: alertmanager-config
+      - name: templates-volume
+        configMap:
+          name: alertmanager-templates
+      - name: alertmanager
+        emptyDir: {}
+      - name: reload-config-volume
+        emptyDir: {}

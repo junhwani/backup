@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  config.yml: |-
+    global:
+            #resolve_timeout: 10s
+      slack_api_url: https://hooks.slack.com/services/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
+    templates:
+    - '/etc/alertmanager/*.tmpl'
+    route:
+      receiver: slack_demo
+      group_by: ['alertname','cluster']
+      group_wait: 10s
+      repeat_interval: 10s
+      routes: []
+    receivers:
+    - name: slack_demo
+      slack_configs:
+      - channel: "# alerts"
+        icon_url: https://avatars3.githubusercontent.com/u/3380462
+        username: "Prometheus"
+        #send_resolved: true

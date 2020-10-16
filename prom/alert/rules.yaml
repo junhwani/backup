@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: prometheus-rules
+  namespace: monitoring
+data:
+  podmemory.rules: |
+    groups:
+    - name: prometheus alert
+      rules:
+      - alert: High Pod Memory
+        expr: sum(container_memory_usage_bytes) > 1
+        for: 5s
+        labels:
+          severity: slack
+        annotations:
+          summary: High Memory Usage
+  memory.rules: |
+    groups:
+    - name: Memory
+      rules:
+      - alert: Memory
+        expr: node_memory_Active_bytes > 0
+        for: 5s
+        labels:
+          severity: slack
+        annotations:
+          summary: High Memory Usage on {{ $labels.instance }}
+          identifier: "{{ $labels.instance }}"
+          description: "{{ $labels.job }} Memory Usage: {{ $value }}"
